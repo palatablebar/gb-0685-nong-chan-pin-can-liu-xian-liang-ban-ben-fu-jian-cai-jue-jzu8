@@ -30,3 +30,14 @@ def test_reselect_existing_run_updates_visible_batch(client):
 
 def test_invalid_csv_type_rejected(client):
     assert client.post('/api/runs',json={'csv':123}).status_code==422
+
+
+def test_archive_page_offers_restore_after_supplement(client):
+    from app.workflow import load
+    raw=load('basis.csv').decode('utf-8-sig')
+    first=client.post('/api/runs',json={'csv':raw}).get_json()
+    assert 'id="restore"' not in client.get('/m7_archive').data.decode()
+    second=client.post('/api/runs/'+first['run_id']+'/evidence',
+        json={'ratio_csv':'sample_id,basis,edible_ratio\nS001,全果,0.9\n'}).get_json()
+    page=client.get('/m7_archive').data.decode()
+    assert 'id="restore"' in page and second['run_id'] in page

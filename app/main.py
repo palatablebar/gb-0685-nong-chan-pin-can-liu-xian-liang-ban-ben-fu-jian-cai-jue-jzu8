@@ -25,6 +25,25 @@ def create_app():
     def list_runs():return jsonify(store.history())
     @app.get('/api/runs/<run_id>')
     def get_run(run_id):return jsonify(store.get(run_id))
+    @app.get('/api/runs/<run_id>/evidence')
+    def get_evidence(run_id):
+        state=store.get(run_id);return jsonify(state.get('evidence',{}))
+    @app.post('/api/runs/<run_id>/restore')
+    def restore_run(run_id):
+        # 补录失败时恢复旧版批次结果，旧版项目与已确认结论原样保留。
+        return jsonify(store.restore(run_id))
+    @app.post('/api/runs/<run_id>/evidence')
+    def supplement_run(run_id):
+        # 晚到的比例凭据按批次补录；任何校验失败都不会改动当前批次结果。
+        data=request.get_json(silent=True) or {}
+        if not isinstance(data,dict):raise DomainError('PAYLOAD','请求必须是对象')
+        raw=data.get('ratio_csv')
+        if isinstance(raw,str):raw=raw.encode('utf-8')
+        if not raw:raise DomainError('EVIDENCE','请提交比例凭据')
+        from app.basis import decode_text,parse_ratio_csv
+        text,encoding=decode_text(raw)
+        records,_=parse_ratio_csv(text,encoding)
+        return jsonify(store.supplement(run_id,records))
     @app.post('/api/runs/<run_id>/review')
     def review(run_id):
         data=request.get_json(silent=True) or {}
@@ -34,6 +53,7 @@ def create_app():
     def download(run_id):
         state=store.get(run_id)
         if not state.get('reconcile',{}).get('balanced'):raise DomainError('UNBALANCED','对账未平')
+        if not state.get('reconcile',{}).get('sealable'):raise DomainError('NOT_SEALABLE','仍有待补录项目，暂不可封存')
         return Response(bundle(state),mimetype='text/csv; charset=utf-8',headers={'Content-Disposition':'attachment; filename=evidence.csv'})
     with app.app_context():
         if not store.history():

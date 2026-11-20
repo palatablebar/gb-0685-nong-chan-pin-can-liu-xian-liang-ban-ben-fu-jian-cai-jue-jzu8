@@ -8,7 +8,7 @@
 docker compose up --build -d
 ```
 
-访问 http://localhost:18254 。初次启动自动运行脏样例，可切换 clean.csv 与 legacy.csv。顶部“运行批次”会重新计算，同源输入复用批次。
+访问 http://localhost:18254 。初次启动自动运行脏样例，可切换 clean.csv、legacy.csv 与 basis.csv（全果/可食部混批 + 比例凭据）。顶部“运行批次”会重新计算，同源输入复用批次。
 
 ## 业务模块
 
@@ -19,10 +19,12 @@ docker compose up --build -d
 - 复检裁决：`/m5_calculate`、`/api/m5_calculate`
 - 批次判级：`/m6_reconcile`、`/api/m6_reconcile`
 - 报告归档：`/m7_archive`、`/api/m7_archive`
+- 比例凭据补录：`POST /api/runs/<id>/evidence`
+- 恢复上一版批次结果：`POST /api/runs/<id>/restore`
 
 ## 核心规则
 
-按采样日期选择有效限量，低于检出限保留区间；复检不得越过样本关联与方法适用范围。完整数值、边界和异常定义见 `docs/DATA-DICTIONARY.md`。
+按采样日期选择有效限量，低于检出限保留区间；复检不得越过样本关联与方法适用范围。外检报告按全果基或可食部基逐份折算，内控限量按可食部基；缺比例凭据的项目挂起待补录，其余项目照常发布。完整数值、边界和异常定义见 `docs/DATA-DICTIONARY.md`。
 
 ## 验证
 

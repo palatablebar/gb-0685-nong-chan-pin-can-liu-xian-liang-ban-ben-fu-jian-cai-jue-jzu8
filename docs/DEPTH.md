@@ -9,7 +9,7 @@
 | M1 报告采信 | 查看并复算报告采信 | `/api/m1_ingest` | `app/modules/m1_ingest/reader.py` | `tests/test_ingest.py` |
 | M2 项目映射 | 查看并复算项目映射 | `/api/m2_mapping` | `app/modules/m2_mapping/rules.py` | `tests/test_mapping.py` |
 | M3 限量选版 | 查看并复算限量选版 | `/api/m3_versions` | `app/modules/m3_versions/rules.py` | `tests/test_versions.py` |
-| M4 检出量换算 | 查看并复算检出量换算 | `/api/m4_segments` | `app/modules/m4_segments/rules.py` | `tests/test_segments.py` |
+| M4 检出量换算 | 查看并复算检出量换算，按可食部基折算 | `/api/m4_segments` | `app/modules/m4_segments/rules.py` | `tests/test_segments.py`、`tests/test_basis.py` |
 | M5 复检裁决 | 查看并复算复检裁决 | `/api/m5_calculate` | `app/modules/m5_calculate/rules.py` | `tests/test_calculate.py` |
 | M6 批次判级 | 查看并复算批次判级 | `/api/m6_reconcile` | `app/modules/m6_reconcile/compare.py` | `tests/test_reconcile.py` |
 | M7 报告归档 | 查看并复算报告归档 | `/api/m7_archive` | `app/modules/m7_archive/export_out.py` | `tests/test_archive.py` |
@@ -32,6 +32,11 @@
 | TRAP-15 | ug/kg与mg/kg | 差1000倍 | 浓度统一mg/kg | `app/modules/m4_segments/rules.py` | `tests/test_segments.py::test_unit_conversion` |
 | TRAP-25 | 标准时间边界 | 双版或错版 | 采样日半开区间选版 | `app/modules/m3_versions/standards.py` | `tests/test_versions.py::test_halfopen_effective` |
 | TRAP-20 | 复检引用环 | 遍历无法结束 | 引用路径检测 | `app/modules/m5_calculate/rules.py` | `tests/test_calculate.py::test_cycle_rejected` |
+| TRAP-27 | 全果/可食部混批 | 整批统一口径误判边缘样本 | 逐份按比例凭据折算可食部基 | `app/basis.py`、`app/modules/m4_segments/rules.py` | `tests/test_basis.py::test_edge_sample_flips_only_with_ratio_evidence` |
+| TRAP-28 | 基准未注明 | 猜可食部基放行 | 待补录挂起，凭据晚到再发布 | `app/modules/m5_calculate/rules.py` | `tests/test_basis.py::test_unknown_basis_waits_for_evidence_not_batch_default` |
+| TRAP-29 | 补录失败 | 覆盖旧版批次 | 校验失败不落库，可恢复上一版 | `app/store.py` | `tests/test_persistence.py::test_failed_supplement_leaves_batch_untouched` |
+| TRAP-30 | 同源重跑 | 重复增加项目/丢确认 | 同 run_id 幂等，已确认结论保留 | `app/store.py` | `tests/test_persistence.py::test_confirmed_conclusion_survives_rerun` |
+| TRAP-31 | 凭据丢失 | 只存解析结果 | 原文 base64+sha256 入归档 | `app/basis.py`、`app/modules/m7_archive/export_out.py` | `tests/test_persistence.py::test_evidence_and_raw_source_are_archived` |
 
 ## 对账规则
 
